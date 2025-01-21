@@ -18,8 +18,6 @@ public class Lox {
     static boolean hadRuntimeError = false;
     // 新增部分结束
     public static void main(String[] args) throws IOException {
-        System.out.println("args length: " + args.length);
-        System.out.println(java.util.Arrays.toString(args));
         if (args.length > 1) {
             System.out.println("Usage: lox [script]");
             System.exit(64);
@@ -87,7 +85,7 @@ public class Lox {
         }
     }
     static void runtimeError(RuntimeError error) {
-        System.err.println(error.getMessage() +
+        System.err.println("Runtime Error: " + error.getMessage() +
                 "\n[line " + error.token.line + "]");
         hadRuntimeError = true;
     }

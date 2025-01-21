@@ -7,7 +7,9 @@ import java.util.Stack;
 
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Interpreter interpreter;
+    // 作用域栈, key 是变量名, value 是是否已定义,如果不存在,则表示未声明
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
+    // 当前函数类型
     private FunctionType currentFunction = FunctionType.NONE;
 
     Resolver(Interpreter interpreter) {
@@ -65,7 +67,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
         Map<String, Boolean> scope = scopes.peek();
         if (scope.containsKey(name.lexeme)) {
-            Lox.error(name, "Already a variable with this name in this scope.");
+            Lox.error(name, "[Resolver] Already a variable with this name in this scope.");
         }
         scope.put(name.lexeme, false);
     }
@@ -81,7 +83,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (!scopes.isEmpty() &&
                 scopes.peek().get(expr.name.lexeme) == Boolean.FALSE) {
             Lox.error(expr.name,
-                    "Can't read local variable in its own initializer.");
+                    "[Resolver] Can't read local variable in its own initializer.");
         }
 
         resolveLocal(expr, expr.name);
@@ -150,7 +152,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitReturnStmt(Stmt.Return stmt) {
         if (currentFunction == FunctionType.NONE) {
-            Lox.error(stmt.keyword, "Can't return from top-level code.");
+            Lox.error(stmt.keyword, "[Resolver] Can't return from top-level code.");
         }
         if (stmt.value != null) {
             resolve(stmt.value);
