@@ -40,10 +40,10 @@ class Environment {
         if (values.containsKey(name.lexeme)) {
             return values.get(name.lexeme);
         }
-        // 新增部分开始
+       
         if (enclosing != null)
             return enclosing.get(name);
-        // 新增部分结束
+       
         throw new RuntimeError(name,
                 "Undefined variable '" + name.lexeme + "'.");
     }

@@ -98,7 +98,7 @@ class Scanner {
                     number();
                 } else if (isAlpha(c)) {
                     identifier();
-                    // 新增部分结束
+                   
                 } else {
                     Lox.error(line, "Unexpected character.");
                 }
@@ -108,12 +108,12 @@ class Scanner {
     private void identifier() {
         while (isAlphaNumeric(peek())) advance();
 
-        // 替换部分开始
+       
         String text = source.substring(start, current);
         TokenType type = keywords.get(text);
         if (type == null) type = IDENTIFIER;
         addToken(type);
-        // 替换部分结束
+       
     }
     private char peek() {
         if (isAtEnd()) return '\0';

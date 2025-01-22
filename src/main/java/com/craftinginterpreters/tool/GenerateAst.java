@@ -34,7 +34,7 @@ public class GenerateAst {
                 "Call       : Expr callee, Token paren, List<Expr> arguments",
                 "Variable : Token name"
         ));
-        // 新增部分开始
+       
         defineAst(outputDir, "Stmt", Arrays.asList(
                 "Block      : List<Stmt> statements",
                 "If         : Expr condition, Stmt thenBranch," +
@@ -47,7 +47,7 @@ public class GenerateAst {
                 "Var        : Token name, Expr initializer",
                 "While      : Expr condition, Stmt body"
         ));
-        // 新增部分结束
+       
     }
     private static void defineAst(
             String outputDir, String baseName, List<String> types)

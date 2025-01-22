@@ -7,9 +7,9 @@ import java.util.List;
 import static com.craftinginterpreters.lox.TokenType.*;
 
 class Parser {
-    // 新增部分开始
+   
     private static class ParseError extends RuntimeException {}
-    // 新增部分结束
+   
     private final List<Token> tokens;
     private int current = 0;
 
@@ -304,7 +304,7 @@ class Parser {
         if (match(NUMBER, STRING)) {
             return new Expr.Literal(previous().literal);
         }
-        // 新增部分开始
+       
         if (match(IDENTIFIER)) {
             return new Expr.Variable(previous());
         }
@@ -313,9 +313,9 @@ class Parser {
             consume(RIGHT_PAREN, "Expect ')' after expression.");
             return new Expr.Grouping(expr);
         }
-        // 新增部分开始
+       
         throw error(peek(), "Expect expression.");
-        // 新增部分结束
+       
     }
     private Token consume(TokenType type, String message) {
         if (check(type)) return advance();

@@ -10,13 +10,13 @@ import java.util.List;
 
 public class Lox {
 
-    // 新增部分开始
+   
     private static final Interpreter interpreter = new Interpreter();
-    // 新增部分结束
+   
     static boolean hadError = false;
-    // 新增部分开始
+   
     static boolean hadRuntimeError = false;
-    // 新增部分结束
+   
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
             System.out.println("Usage: lox [script]");
@@ -34,9 +34,9 @@ public class Lox {
         // Indicate an error in the exit code.
         if (hadError) System.exit(65);
 
-        // 新增部分开始
+       
         if (hadRuntimeError) System.exit(70);
-        // 新增部分结束
+       
     }
     private static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
@@ -54,11 +54,11 @@ public class Lox {
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
 
-        // 替换部分开始
+       
         Parser parser = new Parser(tokens);
-        // 替换部分开始
+       
         List<Stmt> statements = parser.parse();
-        // 替换部分结束
+       
 
         // Stop if there was a syntax error.
         if (hadError) return;

@@ -7,7 +7,7 @@ import java.util.Stack;
 
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Interpreter interpreter;
-    // 作用域栈, key 是变量名, value 是是否已定义,如果不存在,则表示未声明
+    // 作用域栈, key 是变量名, value 是是否已定义,如果不存在,则表示未声明。用来检查变量是否已声明
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
     // 当前函数类型
     private FunctionType currentFunction = FunctionType.NONE;

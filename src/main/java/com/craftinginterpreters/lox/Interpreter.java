@@ -5,10 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class Interpreter implements Expr.Visitor<Object>,
-        Stmt.Visitor<Void> {
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+    // 局部变量表, key 是表达式, value 是深度。作用是：在执行函数时，根据表达式找到对应的局部变量
     private final Map<Expr, Integer> locals = new HashMap<>();
+    // 全局环境
     final Environment globals = new Environment();
+    // 当前环境
     private Environment environment = globals;
 
     void interpret(List<Stmt> statements) {
@@ -21,7 +23,6 @@ class Interpreter implements Expr.Visitor<Object>,
         }
     }
 
-    // 新增部分开始
     Interpreter() {
         globals.define("clock", new LoxCallable() {
             @Override
@@ -69,9 +70,9 @@ class Interpreter implements Expr.Visitor<Object>,
         // environment.assign(expr.name, value);
         Integer distance = locals.get(expr);
         if (distance != null) {
-          environment.assignAt(distance, expr.name, value);
+            environment.assignAt(distance, expr.name, value);
         } else {
-          globals.assign(expr.name, value);
+            globals.assign(expr.name, value);
         }
         return value;
     }
@@ -138,15 +139,15 @@ class Interpreter implements Expr.Visitor<Object>,
         Object right = evaluate(expr.right);
 
         switch (expr.operator.type) {
-            // 新增部分开始
+
             case BANG:
                 return !isTruthy(right);
-            // 新增部分结束
+
             case MINUS:
-                // 新增部分开始
                 checkNumberOperand(expr.operator, right);
-                // 新增部分结束
                 return -(double) right;
+            default:
+                break;
         }
 
         // Unreachable.
@@ -178,14 +179,16 @@ class Interpreter implements Expr.Visitor<Object>,
         // return environment.get(expr.name);
         return lookUpVariable(expr.name, expr);
     }
+
     private Object lookUpVariable(Token name, Expr expr) {
         Integer distance = locals.get(expr);
         if (distance != null) {
-          return environment.getAt(distance, name.lexeme);
+            return environment.getAt(distance, name.lexeme);
         } else {
-          return globals.get(name);
+            return globals.get(name);
         }
-      }
+    }
+
     @Override
     public Void visitVarStmt(Stmt.Var stmt) {
         Object value = null;
@@ -234,35 +237,34 @@ class Interpreter implements Expr.Visitor<Object>,
         Object right = evaluate(expr.right);
 
         switch (expr.operator.type) {
-            // 新增部分开始
+
             case GREATER:
-                // 新增部分开始
+
                 checkNumberOperands(expr.operator, left, right);
-                // 新增部分结束
+
                 return (double) left > (double) right;
             case GREATER_EQUAL:
-                // 新增部分开始
+
                 checkNumberOperands(expr.operator, left, right);
-                // 新增部分结束
+
                 return (double) left >= (double) right;
             case LESS:
-                // 新增部分开始
+
                 checkNumberOperands(expr.operator, left, right);
-                // 新增部分结束
+
                 return (double) left < (double) right;
             case LESS_EQUAL:
-                // 新增部分开始
+
                 checkNumberOperands(expr.operator, left, right);
-                // 新增部分结束
+
                 return (double) left <= (double) right;
-            // 新增部分结束
+
             case MINUS:
-                // 新增部分开始
+
                 checkNumberOperands(expr.operator, left, right);
-                // 新增部分结束
 
                 return (double) left - (double) right;
-            // 新增部分开始
+
             case PLUS:
                 if (left instanceof Double && right instanceof Double) {
                     return (double) left + (double) right;
@@ -272,20 +274,18 @@ class Interpreter implements Expr.Visitor<Object>,
                     return (String) left + (String) right;
                 }
 
-                // 替换部分开始
                 throw new RuntimeError(expr.operator,
                         "Operands must be two numbers or two strings.");
-            // 替换部分结束
-            // 新增部分结束
+
             case SLASH:
-                // 新增部分开始
+
                 checkNumberOperands(expr.operator, left, right);
-                // 新增部分结束
+
                 return (double) left / (double) right;
             case STAR:
-                // 新增部分开始
+
                 checkNumberOperands(expr.operator, left, right);
-                // 新增部分结束
+
                 return (double) left * (double) right;
             case BANG_EQUAL:
                 return !isEqual(left, right);
