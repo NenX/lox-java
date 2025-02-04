@@ -8,22 +8,21 @@ import java.util.List;
 
 public class GenerateAst {
     public static void main(String[] args) throws IOException {
-//        if (args.length != 1)
-//        {
-//            System.err.println("Usage: generate_ast <output
-//            >");
-//            System.exit(64);
-//        }
-        String outputDir ;
-        if (args.length == 0)
-        {
-            File f =  new File("").getAbsoluteFile();
+        // if (args.length != 1)
+        // {
+        // System.err.println("Usage: generate_ast <output
+        // >");
+        // System.exit(64);
+        // }
+        String outputDir;
+        if (args.length == 0) {
+            File f = new File("").getAbsoluteFile();
             outputDir = f.getAbsolutePath() + "\\src\\main\\java\\com\\craftinginterpreters\\lox";
-        }else{
+        } else {
             outputDir = args[0];
         }
 
-        System.out.printf("outputDir: {%s}",outputDir);
+        System.out.printf("outputDir: {%s}", outputDir);
         defineAst(outputDir, "Expr", Arrays.asList(
                 "Assign   : Token name, Expr value",
                 "Binary   : Expr left, Token operator, Expr right",
@@ -32,11 +31,15 @@ public class GenerateAst {
                 "Logical  : Expr left, Token operator, Expr right",
                 "Unary    : Token operator, Expr right",
                 "Call       : Expr callee, Token paren, List<Expr> arguments",
-                "Variable : Token name"
-        ));
-       
+                "Get      : Expr object, Token name",
+                "Set      : Expr object, Token name, Expr value",
+                "This     : Token keyword",
+                "Super    : Token keyword, Token method",
+                "Variable : Token name"));
+
         defineAst(outputDir, "Stmt", Arrays.asList(
                 "Block      : List<Stmt> statements",
+                "Class      : Token name, Expr.Variable superclass, List<Stmt.Function> methods",
                 "If         : Expr condition, Stmt thenBranch," +
                         " Stmt elseBranch",
 
@@ -45,10 +48,10 @@ public class GenerateAst {
                 "Function   : Token name, List<Token> params, List<Stmt> body",
                 "Return     : Token keyword, Expr value",
                 "Var        : Token name, Expr initializer",
-                "While      : Expr condition, Stmt body"
-        ));
-       
+                "While      : Expr condition, Stmt body"));
+
     }
+
     private static void defineAst(
             String outputDir, String baseName, List<String> types)
             throws IOException {
@@ -72,6 +75,7 @@ public class GenerateAst {
         writer.println("}");
         writer.close();
     }
+
     private static void defineVisitor(
             PrintWriter writer, String baseName, List<String> types) {
         writer.println("  interface Visitor<R> {");
@@ -84,6 +88,7 @@ public class GenerateAst {
 
         writer.println("  }");
     }
+
     private static void defineType(
             PrintWriter writer, String baseName,
             String className, String fieldList) {

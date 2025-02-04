@@ -9,7 +9,14 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Interpreter interpreter;
     // 作用域栈, key 是变量名, value 是是否已定义,如果不存在,则表示未声明。用来检查变量是否已声明
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
-    // 当前函数类型
+
+    private enum ClassType {
+        NONE,
+        CLASS,
+        SUBCLASS
+    }
+
+    private ClassType currentClass = ClassType.NONE;
     private FunctionType currentFunction = FunctionType.NONE;
 
     Resolver(Interpreter interpreter) {
@@ -29,6 +36,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             resolve(statement);
         }
     }
+
     private void resolve(Stmt stmt) {
         stmt.accept(this);
     }
@@ -37,28 +45,89 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         expr.accept(this);
     }
 
-    private enum FunctionType {
-        NONE,
-        FUNCTION
+    @Override
+    public Void visitClassStmt(Stmt.Class stmt) {
+        ClassType enclosingClass = currentClass;
+        currentClass = ClassType.CLASS;
+        declare(stmt.name);
+        define(stmt.name);
+
+        if (stmt.superclass != null) {
+            if (stmt.name.lexeme.equals(stmt.superclass.name.lexeme)) {
+                Lox.error(stmt.superclass.name,
+                        "A class can't inherit from itself.");
+            }
+            currentClass = ClassType.SUBCLASS;
+            resolve(stmt.superclass);
+        }
+        if (stmt.superclass != null) {
+            beginScope();
+            scopes.peek().put("super", true);
+        }
+        beginScope();
+        scopes.peek().put("this", true);
+        for (Stmt.Function method : stmt.methods) {
+            FunctionType declaration = FunctionType.METHOD;
+            if (method.name.lexeme.equals("init")) {
+                declaration = FunctionType.INITIALIZER;
+            }
+            resolveFunction(method, declaration);
+        }
+        endScope();
+
+        if (stmt.superclass != null)
+            endScope();
+        currentClass = enclosingClass;
+        return null;
     }
 
+    @Override
+    public Void visitSuperExpr(Expr.Super expr) {
+        if (currentClass == ClassType.NONE) {
+            Lox.error(expr.keyword, "Can't use 'super' outside of a class.");
+        } else if (currentClass != ClassType.SUBCLASS) {
+            Lox.error(expr.keyword, "Can't use 'super' in a class with no superclass.");
+        }
+        resolveLocal(expr, expr.keyword);
+        return null;
+    }
+
+    @Override
+    public Void visitGetExpr(Expr.Get expr) {
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitSetExpr(Expr.Set expr) {
+        resolve(expr.value);
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitThisExpr(Expr.This expr) {
+        if (currentClass == ClassType.NONE) {
+            Lox.error(expr.keyword, "[Resolver] Can't use 'this' outside of a class.");
+            return null;
+        }
+        resolveLocal(expr, expr.keyword);
+        return null;
+    }
+
+    private enum FunctionType {
+        NONE,
+        FUNCTION,
+        METHOD,
+        INITIALIZER
+    }
 
     private void beginScope() {
-        scopes.push(new HashMap<String, Boolean>());
+        scopes.push(new HashMap<>());
     }
 
     private void endScope() {
         scopes.pop();
-    }
-
-    @Override
-    public Void visitVarStmt(Stmt.Var stmt) {
-        declare(stmt.name);
-        if (stmt.initializer != null) {
-            resolve(stmt.initializer);
-        }
-        define(stmt.name);
-        return null;
     }
 
     private void declare(Token name) {
@@ -78,18 +147,6 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         scopes.peek().put(name.lexeme, true);
     }
 
-    @Override
-    public Void visitVariableExpr(Expr.Variable expr) {
-        if (!scopes.isEmpty() &&
-                scopes.peek().get(expr.name.lexeme) == Boolean.FALSE) {
-            Lox.error(expr.name,
-                    "[Resolver] Can't read local variable in its own initializer.");
-        }
-
-        resolveLocal(expr, expr.name);
-        return null;
-    }
-
     private void resolveLocal(Expr expr, Token name) {
         for (int i = scopes.size() - 1; i >= 0; i--) {
             if (scopes.get(i).containsKey(name.lexeme)) {
@@ -97,6 +154,28 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 return;
             }
         }
+    }
+
+    @Override
+    public Void visitVarStmt(Stmt.Var stmt) {
+        declare(stmt.name);
+        if (stmt.initializer != null) {
+            resolve(stmt.initializer);
+        }
+        define(stmt.name);
+        return null;
+    }
+
+    @Override
+    public Void visitVariableExpr(Expr.Variable expr) {
+        if (!scopes.isEmpty() &&
+                scopes.peek().get(expr.name.lexeme) == false) {
+            Lox.error(expr.name,
+                    "[Resolver] Can't read local variable in its own initializer.");
+        }
+
+        resolveLocal(expr, expr.name);
+        return null;
     }
 
     @Override
@@ -155,6 +234,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             Lox.error(stmt.keyword, "[Resolver] Can't return from top-level code.");
         }
         if (stmt.value != null) {
+            if (currentFunction == FunctionType.INITIALIZER) {
+                Lox.error(stmt.keyword,
+                        "Can't return a value from an initializer.");
+            }
             resolve(stmt.value);
         }
 

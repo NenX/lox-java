@@ -60,4 +60,24 @@ class AstPrinter implements Expr.Visitor<String> {
 
         return builder.toString();
     }
+
+    @Override
+    public String visitGetExpr(Expr.Get expr) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String visitSetExpr(Expr.Set expr) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String visitThisExpr(Expr.This expr) {
+        return parenthesize("this", expr);
+    }
+
+    @Override
+    public String visitSuperExpr(Expr.Super expr) {
+        return parenthesize("super", expr);
+    }
 }
